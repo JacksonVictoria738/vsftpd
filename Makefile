@@ -14,10 +14,17 @@ INSTALL  ?= install
 # Extra include paths for dummy headers (fallback when system lacks headers)
 IFLAGS    = -idirafter dummyinc
 
-# Base CFLAGS — override from env if cross-compiling
-CFLAGS   ?= -O2 -fPIE -fstack-protector --param=ssp-buffer-size=4 \
-            -Wall -W -Wshadow -Werror -Wformat-security \
-            -D_FORTIFY_SOURCE=2
+# Base CFLAGS
+# Note: -fstack-protector and -D_FORTIFY_SOURCE are NOT in defaults because
+# uClibc/musl toolchains lack libssp and fortified source support.
+# Set HARDENING=1 to re-enable them for glibc native builds.
+CFLAGS   ?= -O2 -fPIE -Wall -W -Wshadow -Werror
+
+# Optional security hardening (glibc only, needs libssp)
+ifeq ($(HARDENING),1)
+  CFLAGS   += -fstack-protector --param=ssp-buffer-size=4 -D_FORTIFY_SOURCE=2 \
+              -Wformat-security
+endif
 
 # Strip -Werror for cross-compilation (set NOWERROR=1)
 ifeq ($(NOWERROR),1)
