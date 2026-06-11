@@ -152,20 +152,28 @@ static void install_str_setting(const char* p_value, const char** p_storage);
 void
 tunables_load_defaults()
 {
-  tunable_anonymous_enable = 1;
-  tunable_local_enable = 0;
-  tunable_pasv_enable = 1;
-  tunable_port_enable = 1;
+  /*
+   * Embedded-friendly defaults.
+   * - Anonymous access enabled, no password required
+   * - Full read/write/delete/rename for anonymous users
+   * - All sandboxing disabled (max compatibility with uClibc / old kernels)
+   * - Standalone mode (no inetd needed)
+   * - Background daemon mode
+   */
+  tunable_anonymous_enable = 1;          /* Allow anonymous logins */
+  tunable_local_enable = 0;              /* No local users needed */
+  tunable_pasv_enable = 1;              /* Passive mode (E) */
+  tunable_port_enable = 1;              /* Active mode (PORT) */
   tunable_chroot_local_user = 0;
-  tunable_write_enable = 0;
-  tunable_anon_upload_enable = 0;
-  tunable_anon_mkdir_write_enable = 0;
-  tunable_anon_other_write_enable = 0;
+  tunable_write_enable = 1;              /* ★ Enable all FTP writes */
+  tunable_anon_upload_enable = 1;        /* ★ Allow anonymous upload (STOR) */
+  tunable_anon_mkdir_write_enable = 1;   /* ★ Allow anonymous mkdir (MKD) */
+  tunable_anon_other_write_enable = 1;   /* ★ Allow anon delete/rename (DELE/RMD/RNFR) */
   tunable_chown_uploads = 0;
-  tunable_connect_from_port_20 = 0;
+  tunable_connect_from_port_20 = 0;      /* No privileged source port needed */
   tunable_xferlog_enable = 0;
   tunable_dirmessage_enable = 0;
-  tunable_anon_world_readable_only = 1;
+  tunable_anon_world_readable_only = 0;  /* ★ Serve all files, not just world-readable */
   tunable_async_abor_enable = 0;
   tunable_ascii_upload_enable = 0;
   tunable_ascii_download_enable = 0;
@@ -181,28 +189,28 @@ tunables_load_defaults()
   tunable_guest_enable = 0;
   tunable_userlist_enable = 0;
   tunable_userlist_deny = 1;
-  tunable_use_localtime = 0;
-  tunable_check_shell = 1;
-  tunable_hide_ids = 0;
-  tunable_listen = 1;
+  tunable_use_localtime = 1;             /* Use local time */
+  tunable_check_shell = 0;               /* Don't check /etc/shells */
+  tunable_hide_ids = 1;                  /* Hide uid/gid, show "ftp" */
+  tunable_listen = 1;                    /* Standalone mode (no inetd) */
   tunable_port_promiscuous = 0;
   tunable_passwd_chroot_enable = 0;
-  tunable_no_anon_password = 0;
+  tunable_no_anon_password = 1;          /* ★ No password prompt for anonymous */
   tunable_tcp_wrappers = 0;
-  tunable_use_sendfile = 1;
+  tunable_use_sendfile = 0;              /* Disable sendfile() for uClibc compat */
   tunable_force_dot_files = 0;
   tunable_listen_ipv6 = 0;
   tunable_dual_log_enable = 0;
   tunable_syslog_enable = 0;
-  tunable_background = 0;
+  tunable_background = 1;                /* ★ Run as background daemon */
   tunable_virtual_use_local_privs = 0;
   tunable_session_support = 0;
-  tunable_download_enable = 1;
-  tunable_dirlist_enable = 1;
+  tunable_download_enable = 1;           /* Allow downloads */
+  tunable_dirlist_enable = 1;            /* Allow directory listings */
   tunable_chmod_enable = 1;
   tunable_secure_email_list_enable = 0;
   tunable_run_as_launching_user = 0;
-  tunable_no_log_lock = 0;
+  tunable_no_log_lock = 1;               /* ★ Avoid log lock (embedded compat) */
   tunable_ssl_enable = 0;
   tunable_allow_anon_ssl = 0;
   tunable_force_local_logins_ssl = 1;
@@ -227,48 +235,45 @@ tunables_load_defaults()
   tunable_ssl_request_cert = 1;
   tunable_delete_failed_uploads = 0;
   tunable_implicit_ssl = 0;
-  tunable_ptrace_sandbox = 0;
+  tunable_ptrace_sandbox = 0;            /* ★ Disable ptrace sandbox */
   tunable_require_ssl_reuse = 1;
-  tunable_isolate = 1;
-  tunable_isolate_network = 1;
+  tunable_isolate = 0;                   /* ★ Disable PID/IPC namespace isolation */
+  tunable_isolate_network = 0;           /* ★ Disable network namespace isolation */
   tunable_ftp_enable = 1;
   tunable_http_enable = 0;
-  tunable_seccomp_sandbox = 1;
+  tunable_seccomp_sandbox = 0;           /* ★ Disable seccomp (x86_64 only anyway) */
   tunable_allow_writeable_chroot = 0;
 
   tunable_accept_timeout = 60;
   tunable_connect_timeout = 60;
   tunable_local_umask = 077;
-  tunable_anon_umask = 077;
+  tunable_anon_umask = 0;                /* ★ No umask restriction for anon */
   tunable_ftp_data_port = 20;
-  tunable_idle_session_timeout = 300;
+  tunable_idle_session_timeout = 600;    /* Longer timeout for embedded use */
   tunable_data_connection_timeout = 300;
-  /* IPPORT_USERRESERVED + 1 */
-  tunable_pasv_min_port = 5001;
-  tunable_pasv_max_port = 0;
-  tunable_anon_max_rate = 0;
+  tunable_pasv_min_port = 10000;         /* Wider PASV port range */
+  tunable_pasv_max_port = 10100;
+  tunable_anon_max_rate = 0;             /* No bandwidth limit */
   tunable_local_max_rate = 0;
-  /* IPPORT_FTP */
-  tunable_listen_port = 21;
-  tunable_max_clients = 2000;
-  /* -rw-rw-rw- */
-  tunable_file_open_mode = 0666;
-  tunable_max_per_ip = 50;
-  tunable_trans_chunk_size = 0;
-  tunable_delay_failed_login = 1;
+  tunable_listen_port = 21;              /* Standard FTP port */
+  tunable_max_clients = 10;              /* Conservative for embedded */
+  tunable_file_open_mode = 0666;         /* ★ rw-rw-rw- for uploaded files */
+  tunable_max_per_ip = 0;                /* No per-IP connection limit */
+  tunable_trans_chunk_size = 65536;      /* Larger chunk size for efficiency */
+  tunable_delay_failed_login = 0;        /* No delay (no auth anyway) */
   tunable_delay_successful_login = 0;
-  tunable_max_login_fails = 3;
-  /* -rw------- */
+  tunable_max_login_fails = 100;         /* High limit (no auth anyway) */
   tunable_chown_upload_mode = 0600;
 
-  install_str_setting("/usr/share/empty", &tunable_secure_chroot_dir);
+  /* Embedded-friendly paths */
+  install_str_setting("/tmp", &tunable_secure_chroot_dir);
   install_str_setting("ftp", &tunable_ftp_username);
   install_str_setting("root", &tunable_chown_username);
-  install_str_setting("/var/log/xferlog", &tunable_xferlog_file);
-  install_str_setting("/var/log/vsftpd.log", &tunable_vsftpd_log_file);
+  install_str_setting("/tmp/xferlog", &tunable_xferlog_file);
+  install_str_setting("/tmp/vsftpd.log", &tunable_vsftpd_log_file);
   install_str_setting(".message", &tunable_message_file);
   install_str_setting("nobody", &tunable_nopriv_user);
-  install_str_setting(0, &tunable_ftpd_banner);
+  install_str_setting("Embedded FTP server - anonymous read/write enabled", &tunable_ftpd_banner);
   install_str_setting("/etc/vsftpd.banned_emails", &tunable_banned_email_file);
   install_str_setting("/etc/vsftpd.chroot_list", &tunable_chroot_list_file);
   install_str_setting("ftp", &tunable_pam_service_name);

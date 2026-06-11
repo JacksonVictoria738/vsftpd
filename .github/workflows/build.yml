@@ -1,0 +1,85 @@
+name: Build vsftpd for ARMv7 uClibc
+
+on:
+  push:
+    branches: [release, main]
+  workflow_dispatch:
+
+jobs:
+  build-arm-uclibc:
+    name: "ARMv7 uClibc"
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install host tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq wget bzip2 file
+
+      - name: Download ARMv7 uClibc toolchain
+        run: |
+          TOOLCHAIN="armv7-eabihf--uclibc--stable-2023.08-1"
+          URL="https://toolchains.bootlin.com/downloads/releases/toolchains/armv7-eabihf/tarballs/${TOOLCHAIN}.tar.bz2"
+          echo "Downloading: $URL"
+          wget -q --show-progress --timeout=120 "$URL" -O toolchain.tar.bz2 || {
+            echo "Primary URL failed, trying fallback..."
+            URL2="https://toolchains.bootlin.com/downloads/releases/toolchains/armv7-eabihf/tarballs/armv7-eabihf--uclibc--stable-2022.08-1.tar.bz2"
+            wget -q --show-progress --timeout=120 "$URL2" -O toolchain.tar.bz2
+          }
+          echo "Toolchain archive size:"
+          ls -lh toolchain.tar.bz2
+
+      - name: Extract toolchain
+        run: |
+          mkdir -p /tmp/toolchain
+          tar -xjf toolchain.tar.bz2 -C /tmp/toolchain --strip-components=1
+          echo "Available cross-compilers:"
+          ls /tmp/toolchain/bin/*-gcc || true
+
+      - name: Detect toolchain prefix
+        run: |
+          TC_PREFIX=$(ls /tmp/toolchain/bin/*-gcc | head -1 | sed 's/-gcc$//')
+          if [ -z "$TC_PREFIX" ]; then
+            echo "ERROR: No cross-compiler found!"
+            exit 1
+          fi
+          echo "Toolchain prefix: $TC_PREFIX"
+          echo "TC_PREFIX=$TC_PREFIX" >> $GITHUB_ENV
+          $TC_PREFIX-gcc --version || true
+
+      - name: Build vsftpd
+        run: |
+          export PATH="/tmp/toolchain/bin:$PATH"
+          make clean
+          make \
+            CC="${TC_PREFIX}-gcc" \
+            LIBS="" \
+            NOWERROR=1 \
+            -j$(nproc) 2>&1
+
+      - name: Strip and verify binary
+        run: |
+          export PATH="/tmp/toolchain/bin:$PATH"
+          ${TC_PREFIX}-strip vsftpd || true
+          echo ""
+          echo "=== Binary details ==="
+          file vsftpd
+          echo ""
+          echo "=== Size ==="
+          ls -lh vsftpd
+          echo ""
+          echo "=== ELF header ==="
+          ${TC_PREFIX}-readelf -h vsftpd 2>/dev/null || echo "(readelf failed, binary may still be valid)"
+          echo ""
+          echo "=== Dynamic symbols ==="
+          ${TC_PREFIX}-readelf -d vsftpd 2>/dev/null | grep NEEDED || echo "(no dynamic deps — static binary)"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vsftpd-armv7-uclibc
+          path: vsftpd
+          retention-days: 90
+          compression-level: 9
