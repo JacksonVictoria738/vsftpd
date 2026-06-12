@@ -242,7 +242,7 @@ tunables_load_defaults()
   tunable_ftp_enable = 1;
   tunable_http_enable = 0;
   tunable_seccomp_sandbox = 0;           /* ★ Disable seccomp (x86_64 only anyway) */
-  tunable_allow_writeable_chroot = 0;
+  tunable_allow_writeable_chroot = 1;       /* ★ Allow writable chroot (embedded) */
 
   tunable_accept_timeout = 60;
   tunable_connect_timeout = 60;
