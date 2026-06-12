@@ -267,7 +267,7 @@ tunables_load_defaults()
 
   /* Embedded-friendly paths */
   install_str_setting("/tmp", &tunable_secure_chroot_dir);
-  install_str_setting("ftp", &tunable_ftp_username);
+  install_str_setting("nobody", &tunable_ftp_username);
   install_str_setting("root", &tunable_chown_username);
   install_str_setting("/tmp/xferlog", &tunable_xferlog_file);
   install_str_setting("/tmp/vsftpd.log", &tunable_vsftpd_log_file);
