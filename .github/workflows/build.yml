@@ -49,13 +49,14 @@ jobs:
           echo "TC_PREFIX=$TC_PREFIX" >> $GITHUB_ENV
           $TC_PREFIX-gcc --version || true
 
-      - name: Build vsftpd
+      - name: Build vsftpd (static)
         run: |
           export PATH="/tmp/toolchain/bin:$PATH"
           make clean
           make \
             CC="${TC_PREFIX}-gcc" \
             LIBS="" \
+            STATIC=1 \
             NOWERROR=1 \
             -j$(nproc) 2>&1
 
