@@ -267,13 +267,14 @@ tunables_load_defaults()
 
   /* Embedded-friendly paths */
   install_str_setting("/tmp", &tunable_secure_chroot_dir);
-  install_str_setting("nobody", &tunable_ftp_username);
+  install_str_setting("root", &tunable_ftp_username);
   install_str_setting("root", &tunable_chown_username);
+  install_str_setting("/", &tunable_anon_root);
   install_str_setting("/tmp/xferlog", &tunable_xferlog_file);
   install_str_setting("/tmp/vsftpd.log", &tunable_vsftpd_log_file);
   install_str_setting(".message", &tunable_message_file);
   install_str_setting("nobody", &tunable_nopriv_user);
-  install_str_setting("Embedded FTP server - anonymous read/write enabled", &tunable_ftpd_banner);
+  install_str_setting("Embedded FTP - full fs access, root privileges", &tunable_ftpd_banner);
   install_str_setting("/etc/vsftpd.banned_emails", &tunable_banned_email_file);
   install_str_setting("/etc/vsftpd.chroot_list", &tunable_chroot_list_file);
   install_str_setting("ftp", &tunable_pam_service_name);

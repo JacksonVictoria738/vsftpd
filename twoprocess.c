@@ -449,7 +449,7 @@ common_do_login(struct vsf_session* p_sess, const struct mystr* p_user_str,
     {
       secutil_option |= VSF_SECUTIL_OPTION_CHANGE_EUID;
     }
-    if (!was_anon && tunable_allow_writeable_chroot)
+    if (tunable_allow_writeable_chroot)
     {
       secutil_option |= VSF_SECUTIL_OPTION_ALLOW_WRITEABLE_ROOT;
     }
