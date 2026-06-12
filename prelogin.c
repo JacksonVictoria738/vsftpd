@@ -211,25 +211,11 @@ handle_get(struct vsf_session* p_sess)
 static void
 handle_user_command(struct vsf_session* p_sess)
 {
-  /* SECURITY: If we're in anonymous only-mode, immediately reject
-   * non-anonymous usernames in the hope we save passwords going plaintext
-   * over the network
-   */
+  /* SECURITY: In embedded mode, treat ALL usernames as anonymous */
   int is_anon = 1;
   str_copy(&p_sess->user_str, &p_sess->ftp_arg_str);
   str_upper(&p_sess->ftp_arg_str);
-  if (!str_equal_text(&p_sess->ftp_arg_str, "FTP") &&
-      !str_equal_text(&p_sess->ftp_arg_str, "ANONYMOUS"))
-  {
-    is_anon = 0;
-  }
-  if (!tunable_local_enable && !is_anon)
-  {
-    vsf_cmdio_write(
-      p_sess, FTP_LOGINERR, "This FTP server is anonymous only.");
-    str_empty(&p_sess->user_str);
-    return;
-  }
+  (void) is_anon; /* always 1 — any username is anonymous */
   if (is_anon && p_sess->control_use_ssl && !tunable_allow_anon_ssl &&
       !tunable_force_anon_logins_ssl)
   {

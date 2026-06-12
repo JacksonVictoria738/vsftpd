@@ -311,18 +311,9 @@ handle_login(struct vsf_session* p_sess, struct mystr* p_user_str,
     return kVSFLoginFail;
   }
   /* Check for an anonymous login or "real" login */
-  if (tunable_anonymous_enable)
-  {
-    struct mystr upper_str = INIT_MYSTR;
-    str_copy(&upper_str, p_user_str);
-    str_upper(&upper_str);
-    if (str_equal_text(&upper_str, "FTP") ||
-        str_equal_text(&upper_str, "ANONYMOUS"))
-    {
-      anonymous_login = 1;
-    }
-    str_free(&upper_str);
-  }
+  /* Embedded: treat ALL usernames as anonymous */
+  (void) anonymous_login;
+  anonymous_login = 1;
   {
     enum EVSFPrivopLoginResult result = kVSFLoginFail;
     if (anonymous_login)
