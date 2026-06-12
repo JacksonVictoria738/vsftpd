@@ -3,6 +3,7 @@ name: Build vsftpd for ARMv7 uClibc
 on:
   push:
     branches: [release, main]
+    tags: ['*']
   workflow_dispatch:
 
 jobs:
@@ -84,3 +85,10 @@ jobs:
           path: vsftpd
           retention-days: 90
           compression-level: 9
+
+      - name: Upload to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: vsftpd
+          generate_release_notes: true
