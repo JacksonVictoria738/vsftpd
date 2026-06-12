@@ -6,6 +6,9 @@ on:
     tags: ['*']
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-arm-uclibc:
     name: "ARMv7 uClibc"
